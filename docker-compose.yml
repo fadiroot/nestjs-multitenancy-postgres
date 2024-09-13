@@ -1,5 +1,4 @@
 version: '3.8'
-name: tenancy-example-dev
 
 x-defaults:
   &defaults
@@ -10,16 +9,12 @@ x-defaults:
 
 networks:
   tenancy_example_network:
-    external: true
 
 volumes:
   tenancy_example_db_data:
-    external: true
 
 services:
-
   ####################################################################  
-
   db:
     <<: *defaults
     image: postgres:15.3-alpine3.17
@@ -34,7 +29,6 @@ services:
       POSTGRES_PASSWORD: 07f019e661d8ca48c47bdffd255b12fe
 
   ####################################################################           
-
   proxy:
     <<: *defaults
     image: nginx:1.23.4-alpine3.17
@@ -54,8 +48,8 @@ services:
     <<: *defaults
     depends_on:
       - backend
-    expose:
-      - 3000
+    ports:
+      - "3000:3000"
     command: yarn workspace frontend dev
     environment:
       - PORT=3000
@@ -75,8 +69,8 @@ services:
 
   backend:
     <<: *defaults
-    expose:
-      - 3333
+    ports:
+      - "3333:3333"
     command: yarn workspace backend start:dev
     environment:
       - PORT=3333
@@ -91,4 +85,13 @@ services:
       - ./apps/backend:/app/apps/backend
       - /app/node_modules
       - /app/apps/backend/node_modules
-  ####################################################################    
+
+  ####################################################################
+
+  adminer:
+    <<: *defaults
+    image: adminer:4.8.1
+    ports:
+      - "8080:8080"
+    networks:
+      - tenancy_example_network

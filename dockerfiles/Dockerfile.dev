@@ -1,17 +1,23 @@
 # syntax=docker/dockerfile:1.5.2
 
-FROM custom-node:latest AS builder
+FROM node:20.2.0-alpine3.17 AS builder
 WORKDIR /app
 ARG APP
+
+# Install turbo globally
+RUN npm install -g turbo
 
 COPY . .
 
 ## see https://turbo.build/repo/docs/reference/command-line-reference#turbo-prune---scopetarget
 RUN turbo prune --scope=$APP --docker
 
-FROM custom-node:latest AS installer
+FROM node:20.2.0-alpine3.17 AS installer
 WORKDIR /app
 ARG APP
+
+# Install turbo globally
+RUN npm install -g turbo
 
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/yarn.lock ./yarn.lock
@@ -25,7 +31,6 @@ COPY turbo.json turbo.json
 
 ## --filter=frontend^... means all of frontend's dependencies will be built, but not the frontend app itself (which we don't need to do for dev environment)
 RUN turbo run build --no-cache --filter=${APP}^...
-
 
 # re-running yarn is necessary to catch changes to deps between workspaces
 RUN \
